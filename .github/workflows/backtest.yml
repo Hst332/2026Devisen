@@ -10,9 +10,13 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: List repo files (debug)
+        run: ls -la
 
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v3
@@ -23,6 +27,10 @@ jobs:
           auto-activate: true
           conda-remove-defaults: true
 
-      - name: Run
+      - name: Verify Python
+        shell: bash -l {0}
+        run: python --version
+
+      - name: Run Forecast Script
         shell: bash -l {0}
         run: python forex_forecast_backtest.py --years 10 --cost_bps 0.5
