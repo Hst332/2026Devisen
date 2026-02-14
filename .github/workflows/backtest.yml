@@ -15,22 +15,42 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: List repo files (debug)
-        run: ls -la
+      - name: Locate environment.yml
+        id: locate_env
+        shell: bash
+        run: |
+          echo "Repo root content:"
+          ls -la
+          ENV_PATH=$(find . -maxdepth 3 -type f \( -name "environment.yml" -o -name "environment.yaml" \) | head -n 1)
+          if [ -z "$ENV_PATH" ]; then
+            echo "ERROR: environment.yml not found within maxdepth=3"
+            exit 1
+          fi
+          echo "Found env file at: $ENV_PATH"
+          echo "env_path=$ENV_PATH" >> $GITHUB_OUTPUT
 
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: "3.11"
-          environment-file: environment.yml
+          environment-file: ${{ steps.locate_env.outputs.env_path }}
           activate-environment: forex-forecast
           auto-activate: true
           conda-remove-defaults: true
 
-      - name: Verify Python
-        shell: bash -l {0}
-        run: python --version
+      - name: Locate forecast script
+        id: locate_py
+        shell: bash
+        run: |
+          PY_PATH=$(find . -maxdepth 3 -type f -name "forex_forecast_backtest.py" | head -n 1)
+          if [ -z "$PY_PATH" ]; then
+            echo "ERROR: forex_forecast_backtest.py not found within maxdepth=3"
+            exit 1
+          fi
+          echo "Found script at: $PY_PATH"
+          echo "py_path=$PY_PATH" >> $GITHUB_OUTPUT
 
       - name: Run Forecast Script
         shell: bash -l {0}
-        run: python forex_forecast_backtest.py --years 10 --cost_bps 0.5
+        run: |
+          python ${{ steps.locate_py.outputs.py_path }} --years 10 --cost_bps 0.5
