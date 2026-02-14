@@ -2,9 +2,9 @@ name: Forex Forecast Backtest
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
   workflow_dispatch:
 
 jobs:
@@ -18,22 +18,17 @@ jobs:
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v3
         with:
-          auto-update-conda: true
           python-version: "3.11"
-          environment-file: .github/workflows/environment.yml
+          environment-file: environment.yml
           activate-environment: forex-forecast
-          auto-activate-base: false
+          auto-activate: true
+          conda-remove-defaults: true
 
       - name: Show Python
         shell: bash -l {0}
         run: python --version
 
-      - name: Install pip deps (if any)
-        shell: bash -l {0}
-        run: |
-          python -m pip install --upgrade pip
-
-      - name: Run backtest
+      - name: Run Forecast
         shell: bash -l {0}
         run: |
           python forex_forecast_backtest.py --years 10 --cost_bps 0.5
